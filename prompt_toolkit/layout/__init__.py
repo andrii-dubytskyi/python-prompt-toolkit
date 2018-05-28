@@ -45,10 +45,9 @@ And one prepared menu:
 
 """
 from __future__ import unicode_literals
-from .containers import Container, HSplit, VSplit, FloatContainer, Float, Window, WindowAlign, WindowRenderInfo, ConditionalContainer, ScrollOffsets, ColorColumn, to_container, to_window, is_container, HorizontalAlign, VerticalAlign
-from .controls import BufferControl, SearchBufferControl, DummyControl, FormattedTextControl, UIControl, UIContent
-from .dimension import Dimension, D, sum_layout_dimensions, max_layout_dimensions, to_dimension, is_dimension
 from .layout import Layout, InvalidLayoutError, walk
+from .containers import Container, HSplit, VSplit, FloatContainer, Float, Window, WindowRenderInfo, ConditionalContainer, ScrollOffsets, ColorColumn, to_container, to_window, is_container
+from .controls import BufferControl, SearchBufferControl, DummyControl, FormattedTextControl, UIControl, UIContent
 from .margins import Margin, NumberedMargin, ScrollbarMargin, ConditionalMargin, PromptMargin
 from .menus import CompletionsMenu, MultiColumnCompletionsMenu
 
@@ -74,7 +73,6 @@ __all__ = [
     'VSplit',
     'FloatContainer',
     'Float',
-    'WindowAlign',
     'Window',
     'WindowRenderInfo',
     'ConditionalContainer',

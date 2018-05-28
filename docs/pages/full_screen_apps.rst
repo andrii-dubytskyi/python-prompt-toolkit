@@ -13,14 +13,13 @@ them together.
 
 Before going through this page, it could be helpful to go through :ref:`asking
 for input <asking_for_input>` (prompts) first. Many things that apply to an
-input prompt, like styling, key bindings and so on, also apply to full screen
-applications.
+input prompt also apply to full screen applications.
 
 .. note::
 
     Also remember that the ``examples`` directory of the prompt_toolkit
-    repository contains plenty of examples. Each example is supposed to explain
-    one idea. So, this as well should help you get started.
+    application contains plenty of examples. Each example is supposed to
+    explain one idea. So, this as well should help you get started.
 
     Don't hesitate to open a GitHub issue if you feel that a certain example is
     missing.
@@ -68,9 +67,9 @@ I/O objects
 Every :class:`~prompt_toolkit.application.Application` instance requires an I/O
 objects for input and output:
 
-    - An :class:`~prompt_toolkit.input.Input` instance, which is an abstraction
-      of the input stream (stdin).
-    - An :class:`~prompt_toolkit.output.Output` instance, which is an
+    - An :class:`~prompt_toolkit.input.base.Input` instance, which is an
+      abstraction of the input stream (stdin).
+    - An :class:`~prompt_toolkit.output.base.Output` instance, which is an
       abstraction of the output stream, and is called by the renderer.
 
 Both are optional and normally not needed to pass explicitly. Usually, the
@@ -78,7 +77,7 @@ default works fine.
 
 There is a third I/O object which is also required by the application, but not
 passed inside. This is the event loop, an
-:class:`~prompt_toolkit.eventloop.EventLoop` instance. This is basically a
+:class:`~prompt_toolkit.eventloop.base.EventLoop` instance. This is basically a
 while-true loop that waits for user input, and when it receives something (like
 a key press), it will send that to the the appropriate handler, like for
 instance, a key binding.
@@ -218,8 +217,6 @@ vertical line:
     app = Application(layout=layout, full_screen=True)
     app.run() # You won't be able to Exit this app
 
-Notice that if you execute this right now, there is no way to quit this
-application yet. This is something we explain in the next section below.
 
 More complex layouts can be achieved by nesting multiple
 :class:`~prompt_toolkit.layout.VSplit`,
@@ -255,8 +252,6 @@ for getting the active application.
     # Now focus it.
     get_app().layout.focus(w)
 
-Changing the focus is something which is typically done in a key binding, so
-read on to see how to define key bindings.
 
 Key bindings
 ------------
@@ -317,8 +312,6 @@ the key handler:
 The callback function is named ``exit_`` for clarity, but it could have been
 named ``_`` (underscore) as well, because the we won't refer to this name.
 
-:ref:`Read more about key bindings ...<key_bindings>`
-
 
 Modal containers
 ^^^^^^^^^^^^^^^^
@@ -350,9 +343,9 @@ As said earlier, a :class:`~prompt_toolkit.layout.Window` is a
     Basically, windows are the leafs in the tree structure that represent the UI.
 
 A :class:`~prompt_toolkit.layout.Window` provides a "view" on the
-:class:`~prompt_toolkit.layout.UIControl`, which provides lines of content. The
-window is in the first place responsible for the line wrapping and scrolling of
-the content, but there are much more options.
+:class:`~prompt_toolkit.layout.controls.UIControl`, which provides lines of
+content. The window is in the first place responsible for the line wrapping and
+scrolling of the content, but there are much more options.
 
 - Adding left or right margins. These are used for displaying scroll bars or
   line numbers.

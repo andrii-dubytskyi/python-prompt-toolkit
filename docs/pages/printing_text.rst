@@ -59,7 +59,7 @@ You can replace the built in ``print`` function as follows, if you want to.
 Formatted text
 --------------
 
-There are several ways to display colors:
+There are several ways to print colors:
 
 - By creating an :class:`~prompt_toolkit.formatted_text.HTML` object.
 - By creating an :class:`~prompt_toolkit.formatted_text.ANSI` object that
@@ -84,22 +84,26 @@ italic and underline: ``<b>``, ``<i>`` and ``<u>``.
     from __future__ import unicode_literals, print_function
     from prompt_toolkit import print_formatted_text, HTML
 
-    print_formatted_text(HTML('<b>This is bold</b>'))
-    print_formatted_text(HTML('<i>This is italic</b>'))
-    print_formatted_text(HTML('<u>This is underlined</u>'))
+    print = print_formatted_text
+
+    print(HTML('<b>This is bold</b>'))
+    print(HTML('<i>This is italic</b>'))
+    print(HTML('<u>This is underlined</u>'))
 
 Further, it's possible to use tags for foreground colors:
 
 .. code:: python
 
+    print = print_formatted_text
+
     # Colors from the ANSI palette.
-    print_formatted_text(HTML('<ansired>This is red</ansired>'))
-    print_formatted_text(HTML('<ansigreen>This is green</ansigreen>'))
+    print(HTML('<ansired>This is red</ansired>'))
+    print(HTML('<ansigreen>This is green</ansigreen>'))
 
     # Named colors (256 color palette, or true color, depending on the output).
-    print_formatted_text(HTML('<skyblue>This is light pink</skyblue>'))
-    print_formatted_text(HTML('<seagreen>This is light pink</seagreen>'))
-    print_formatted_text(HTML('<violet>This is light pink</violet>'))
+    print(HTML('<skyblue>This is light pink</skyblue>'))
+    print(HTML('<seagreen>This is light pink</seagreen>'))
+    print(HTML('<violet>This is light pink</violet>'))
 
 Both foreground and background colors can also be specified setting the `fg`
 and `bg` attributes of any tag:

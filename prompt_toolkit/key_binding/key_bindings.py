@@ -38,7 +38,7 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 from prompt_toolkit.cache import SimpleCache
-from prompt_toolkit.filters import to_filter, Never
+from prompt_toolkit.filters import Filter, to_filter, Never
 from prompt_toolkit.keys import Keys, ALL_KEYS, KEY_ALIASES
 
 from six import text_type, with_metaclass
@@ -56,23 +56,21 @@ __all__ = [
 class _Binding(object):
     """
     (Immutable binding class.)
-
-    :param record_in_macro: When True, don't record this key binding when a
-        macro is recorded.
     """
-    def __init__(self, keys, handler, filter=True, eager=False,
-                 is_global=False, save_before=None, record_in_macro=True):
+    def __init__(self, keys, handler, filter=None, eager=None, is_global=None, save_before=None):
         assert isinstance(keys, tuple)
         assert callable(handler)
+        assert isinstance(filter, Filter)
+        assert isinstance(eager, Filter)
+        assert isinstance(is_global, Filter)
         assert callable(save_before)
 
         self.keys = keys
         self.handler = handler
-        self.filter = to_filter(filter)
-        self.eager = to_filter(eager)
-        self.is_global = to_filter(is_global)
+        self.filter = filter
+        self.eager = eager
+        self.is_global = is_global
         self.save_before = save_before
-        self.record_in_macro = to_filter(record_in_macro)
 
     def call(self, event):
         return self.handler(event)
@@ -172,14 +170,11 @@ class KeyBindings(KeyBindingsBase):
         :param save_before: Callable that takes an `Event` and returns True if
             we should save the current buffer, before handling the event.
             (That's the default.)
-        :param record_in_macro: Record these key bindings when a macro is
-            being recorded. (True by default.)
         """
         filter = to_filter(kwargs.pop('filter', True))
         eager = to_filter(kwargs.pop('eager', False))
         is_global = to_filter(kwargs.pop('is_global', False))
         save_before = kwargs.pop('save_before', lambda e: True)
-        record_in_macro = to_filter(kwargs.pop('record_in_macro', True))
 
         assert not kwargs
         assert keys
@@ -203,13 +198,11 @@ class KeyBindings(KeyBindingsBase):
                             filter=func.filter & filter,
                             eager=eager | func.eager,
                             is_global = is_global | func.is_global,
-                            save_before=func.save_before,
-                            record_in_macro=func.record_in_macro))
+                            save_before=func.save_before))
                 else:
                     self.bindings.append(
                         _Binding(keys, func, filter=filter, eager=eager,
-                                 is_global=is_global, save_before=save_before,
-                                 record_in_macro=record_in_macro))
+                                 is_global=is_global, save_before=save_before))
                 self._clear_cache()
 
                 return func
@@ -332,32 +325,27 @@ def _check_and_expand_key(key):
         key = ' '
 
     # Final validation.
-    assert isinstance(key, text_type), 'Got %r' % (key, )
+    assert isinstance(key, text_type)
     if len(key) != 1 and key not in ALL_KEYS:
         raise ValueError('Invalid key: %s' % (key, ))
 
     return key
 
 
-def key_binding(filter=True, eager=False, is_global=False, save_before=None,
-                record_in_macro=True):
+def key_binding(filter=True, eager=False, is_global=False, save_before=None):
     """
     Decorator that turn a function into a `_Binding` object. This can be added
     to a `KeyBindings` object when a key binding is assigned.
     """
-    assert save_before is None or callable(save_before)
-
     filter = to_filter(filter)
     eager = to_filter(eager)
     is_global = to_filter(is_global)
-    save_before = save_before or (lambda event: True)
-    record_in_macro = to_filter(record_in_macro)
+    save_before = save_before or (lambda e: True)
     keys = ()
 
     def decorator(function):
         return _Binding(keys, function, filter=filter, eager=eager,
-                        is_global=is_global, save_before=save_before,
-                        record_in_macro=record_in_macro)
+                        is_global=is_global, save_before=save_before)
 
     return decorator
 
@@ -413,8 +401,8 @@ class ConditionalKeyBindings(_Proxy):
     When new key bindings are added to this object. They are also
     enable/disabled according to the given `filter`.
 
-    :param registries: List of :class:`.KeyBindings` objects.
-    :param filter: :class:`~prompt_toolkit.filters.Filter` object.
+    :param registries: List of `KeyBindings` objects.
+    :param filter: `Filter` object.
     """
     def __init__(self, key_bindings, filter=True):
         assert isinstance(key_bindings, KeyBindingsBase)
@@ -439,8 +427,7 @@ class ConditionalKeyBindings(_Proxy):
                         filter=self.filter & b.filter,
                         eager=b.eager,
                         is_global=b.is_global,
-                        save_before=b.save_before,
-                        record_in_macro=b.record_in_macro))
+                        save_before=b.save_before))
 
             self._bindings2 = bindings2
             self._last_version = expected_version
@@ -450,10 +437,10 @@ class _MergedKeyBindings(_Proxy):
     """
     Merge multiple registries of key bindings into one.
 
-    This class acts as a proxy to multiple :class:`.KeyBindings` objects, but
-    behaves as if this is just one bigger :class:`.KeyBindings`.
+    This class acts as a proxy to multiple `KeyBindings` objects, but behaves as
+    if this is just one bigger `KeyBindings`.
 
-    :param registries: List of :class:`.KeyBindings` objects.
+    :param registries: List of `KeyBindings` objects.
     """
     def __init__(self, registries):
         assert all(isinstance(r, KeyBindingsBase) for r in registries)
@@ -479,7 +466,7 @@ class _MergedKeyBindings(_Proxy):
 
 def merge_key_bindings(bindings):
     """
-    Merge multiple :class:`.Keybinding` objects together.
+    Merge multiple `Keybinding` objects together.
 
     Usage::
 
@@ -512,8 +499,8 @@ class DynamicKeyBindings(_Proxy):
 
 class GlobalOnlyKeyBindings(_Proxy):
     """
-    Wrapper around a :class:`.KeyBindings` object that only exposes the global
-    key bindings.
+    Wrapper around a `KeyBindings` object that only exposes the global key
+    bindings.
     """
     def __init__(self, key_bindings):
         assert isinstance(key_bindings, KeyBindingsBase)

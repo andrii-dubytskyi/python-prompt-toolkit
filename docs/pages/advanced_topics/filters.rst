@@ -1,7 +1,8 @@
 .. _filters:
 
+
 Filters
-=======
+-------
 
 Many places in `prompt_toolkit` require a boolean value that can change over
 time. For instance:
@@ -30,7 +31,7 @@ state of a filter is done by simply calling it.
 
 
 An example
-----------
+^^^^^^^^^^
 
 The most obvious way to create such a :class:`~prompt_toolkit.filters.Filter`
 instance is by creating a :class:`~prompt_toolkit.filters.Condition` instance
@@ -77,7 +78,7 @@ function:
 
 
 Built-in filters
-----------------
+^^^^^^^^^^^^^^^^^
 
 There are many built-in filters, ready to use. All of them have a lowercase
 name, because they represent the wrapped function underneath, and can be called
@@ -116,7 +117,7 @@ as a function.
 
 
 Combining filters
------------------
+^^^^^^^^^^^^^^^^^
 
 Filters can be chained with the ``&`` (AND) and ``|`` (OR) operators and
 negated with the ``~`` (negation) operator.
@@ -142,7 +143,7 @@ Some examples:
 
 
 to_filter
----------
+^^^^^^^^^
 
 Finally, in many situations you want your code to expose an API that is able to
 deal with both booleans as well as filters. For instance, when for most users a
@@ -159,11 +160,10 @@ instance, and always returns a :class:`~prompt_toolkit.filters.Filter`.
 
 .. code:: python
 
-    from prompt_toolkit.filters.utils import to_filter
+        from prompt_toolkit.filters.utils import to_filter
 
-    # In each of the following three examples, 'f' will be a `Filter`
-    # instance.
-    f = to_filter(True)
-    f = to_filter(False)
-    f = to_filter(Condition(lambda: True))
-    f = to_filter(has_search | has_selection)
+        # In each of the following three examples, 'f' will be a `Filter`
+        # instance.
+        f = to_filter(True)
+        f = to_filter(False)
+        f = to_filter(Condition(lambda: True))

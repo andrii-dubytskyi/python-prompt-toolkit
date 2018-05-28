@@ -6,11 +6,11 @@ from __future__ import unicode_literals
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit.contrib.completers import PathCompleter
 from prompt_toolkit.eventloop import Future, ensure_future, Return, From
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import Float, HSplit, VSplit, Window, WindowAlign, ConditionalContainer
+from prompt_toolkit.layout.containers import Float, HSplit, VSplit, Window, Align, ConditionalContainer
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.layout import Layout
@@ -121,7 +121,7 @@ body = HSplit([
         content=VSplit([
             Window(FormattedTextControl(get_statusbar_text), style='class:status'),
             Window(FormattedTextControl(get_statusbar_right_text),
-                   style='class:status.right', width=9, align=WindowAlign.RIGHT),
+                   style='class:status.right', width=9, align=Align.RIGHT),
         ], height=1),
         filter=Condition(lambda: ApplicationState.show_status_bar)),
 ])

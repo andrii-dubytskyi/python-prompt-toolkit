@@ -10,9 +10,8 @@ import string
 import weakref
 from six.moves import range, map
 
-from .clipboard import ClipboardData
-from .filters import vi_mode
 from .selection import SelectionType, SelectionState, PasteMode
+from .clipboard import ClipboardData
 
 __all__ = [
     'Document',
@@ -785,8 +784,9 @@ class Document(object):
 
     def selection_ranges(self):
         """
-        Return a list of `(from, to)` tuples for the selection or none if
-        nothing was selected. The upper boundary is not included.
+        Return a list of (from, to) tuples for the selection or none if nothing
+        was selected.  start and end position are always included in the
+        selection.
 
         This will yield several (from, to) tuples in case of a BLOCK selection.
         """
@@ -798,9 +798,6 @@ class Document(object):
                 to_line, to_column = self.translate_index_to_position(to)
                 from_column, to_column = sorted([from_column, to_column])
                 lines = self.lines
-
-                if vi_mode():
-                    to_column += 1
 
                 for l in range(from_line, to_line + 1):
                     line_length = len(lines[l])
@@ -817,25 +814,16 @@ class Document(object):
                     else:
                         to = len(self.text) - 1
 
-                # In Vi mode, the upper boundary is always included. For Emacs,
-                # that's not the case.
-                if vi_mode():
-                    to += 1
-
                 yield from_, to
 
     def selection_range_at_line(self, row):
         """
         If the selection spans a portion of the given line, return a (from, to) tuple.
-
-        The returned upper boundary is not included in the selection, so
-        `(0, 0)` is an empty selection.  `(0, 1)`, is a one character selection.
-
-        Returns None if the selection doesn't cover this line at all.
+        Otherwise, return None.
         """
         if self.selection:
             row_start = self.translate_row_col_to_index(row, 0)
-            row_end = self.translate_row_col_to_index(row, len(self.lines[row]))
+            row_end = self.translate_row_col_to_index(row, max(0, len(self.lines[row]) - 1))
 
             from_, to = sorted([self.cursor_position, self.selection.original_cursor_position])
 
@@ -857,11 +845,6 @@ class Document(object):
                 _, from_column = self.translate_index_to_position(intersection_start)
                 _, to_column = self.translate_index_to_position(intersection_end)
 
-                # In Vi mode, the upper boundary is always included. For Emacs
-                # mode, that's not the case.
-                if vi_mode():
-                    to_column += 1
-
                 return from_column, to_column
 
     def cut_selection(self):
@@ -881,8 +864,8 @@ class Document(object):
                     new_cursor_position = from_
 
                 remaining_parts.append(self.text[last_to:from_])
-                cut_parts.append(self.text[from_:to])
-                last_to = to
+                cut_parts.append(self.text[from_:to + 1])
+                last_to = to + 1
 
             remaining_parts.append(self.text[last_to:])
 

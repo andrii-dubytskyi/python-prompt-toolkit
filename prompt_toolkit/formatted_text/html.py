@@ -60,7 +60,6 @@ class HTML(object):
                     for k, v in child.attributes.items():
                         if k == 'fg': fg = v
                         if k == 'bg': bg = v
-                        if k == 'color': fg = v  # Alias for 'fg'.
 
                     # Check for spaces in attributes. This would result in
                     # invalid style strings otherwise.

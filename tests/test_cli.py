@@ -21,9 +21,9 @@ import pytest
 
 def _history():
     h = InMemoryHistory()
-    h.append_string('line1 first input')
-    h.append_string('line2 second input')
-    h.append_string('line3 third input')
+    h.append('line1 first input')
+    h.append('line2 second input')
+    h.append('line3 third input')
     return h
 
 
@@ -184,29 +184,6 @@ def test_emacs_cursor_movements():
     assert result.cursor_position == len('hello')
 
 
-def test_emacs_kill_multiple_words_and_paste():
-    # Using control-w twice should place both words on the clipboard.
-    result, cli = _feed_cli_with_input(
-        'hello world test'
-        '\x17\x17'  # Twice c-w.
-        '--\x19\x19\r'  # Twice c-y.
-    )
-    assert result.text == 'hello --world testworld test'
-    assert cli.clipboard.get_data().text == 'world test'
-
-    # Using alt-d twice should place both words on the clipboard.
-    result, cli = _feed_cli_with_input(
-        'hello world test'
-        '\x1bb\x1bb'  # Twice left.
-        '\x1bd\x1bd'  # Twice kill-word.
-        'abc'
-        '\x19'  # Paste.
-        '\r'
-    )
-    assert result.text == 'hello abcworld test'
-    assert cli.clipboard.get_data().text == 'world test'
-
-
 def test_interrupts():
     # ControlC: raise KeyboardInterrupt.
     with pytest.raises(KeyboardInterrupt):
@@ -319,7 +296,7 @@ def test_emacs_history_bindings():
     history = _history()
     result, cli = _feed_cli_with_input('new input\r', history=history)
     assert result.text == 'new input'
-    history.get_strings()[-1] == 'new input'
+    history.strings[-1] == 'new input'
 
     # Go up in history, and accept the last item.
     result, cli = _feed_cli_with_input('hello\x1b[A\r', history=history)
@@ -434,54 +411,6 @@ def test_emacs_kill_ring():
     assert result.text == 'ghi'
 
 
-def test_emacs_selection():
-    # Copy/paste empty selection should not do anything.
-    operations = (
-        'hello'
-
-        # Twice left.
-        '\x1b[D\x1b[D'
-
-        # Control-Space
-        '\x00'
-
-        # ControlW (cut)
-        '\x17'
-
-        # ControlY twice. (paste twice)
-        '\x19\x19\r'
-    )
-
-    result, cli = _feed_cli_with_input(operations)
-    assert result.text == 'hello'
-
-    # Copy/paste one character.
-    operations = (
-        'hello'
-
-        # Twice left.
-        '\x1b[D\x1b[D'
-
-        # Control-Space
-        '\x00'
-
-        # Right.
-        '\x1b[C'
-
-        # ControlW (cut)
-        '\x17'
-
-        # ControlA (Home).
-        '\x01'
-
-        # ControlY (paste)
-        '\x19\r'
-    )
-
-    result, cli = _feed_cli_with_input(operations)
-    assert result.text == 'lhelo'
-
-
 def test_emacs_insert_comment():
     # Test insert-comment (M-#) binding.
     result, cli = _feed_cli_with_input('hello\x1b#', check_line_ending=False)
@@ -506,39 +435,6 @@ def test_emacs_record_macro():
 
     result, cli = _feed_cli_with_input(operations)
     assert result.text == '  hello  hellohello'
-
-
-def test_emacs_nested_macro():
-    " Test calling the macro within a macro. "
-    # Calling a macro within a macro should take the previous recording (if one
-    # exists), not the one that is in progress.
-    operations = (
-        '\x18('  # Start recording macro. C-X(
-        'hello'
-        '\x18e'  # Execute macro.
-        '\x18)'  # Stop recording macro.
-        '\x18e'  # Execute macro.
-        '\r'
-    )
-
-    result, cli = _feed_cli_with_input(operations)
-    assert result.text == 'hellohello'
-
-    operations = (
-        '\x18('  # Start recording macro. C-X(
-        'hello'
-        '\x18)'  # Stop recording macro.
-        '\x18('  # Start recording macro. C-X(
-        '\x18e'  # Execute macro.
-        'world'
-        '\x18)'  # Stop recording macro.
-        '\x01\x0b'  # Delete all (c-a c-k).
-        '\x18e'  # Execute macro.
-        '\r'
-    )
-
-    result, cli = _feed_cli_with_input(operations)
-    assert result.text == 'helloworld'
 
 
 def test_prefix_meta():
@@ -680,7 +576,7 @@ def test_vi_block_editing():
                    multiline=True)
 
     operations = (
-        # Six lines of text.
+        # Three lines of text.
         '-line1\r-line2\r-line3\r-line4\r-line5\r-line6'
         # Go to the second character of the second line.
         '\x1bkkkkkkkj0l'
@@ -710,36 +606,6 @@ def test_vi_block_editing():
             '-line1\n-line***2\n-line***3\n-line***4\n-line5\n-line6')
 
 
-def test_vi_visual_line_copy():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI,
-                   multiline=True)
-
-    operations = (
-        # Three lines of text.
-        '-line1\r-line2\r-line3\r-line4\r-line5\r-line6'
-        # Go to the second character of the second line.
-        '\x1bkkkkkkkj0l'
-        # Enter Visual linemode.
-        'V'
-        # Go down one line.
-        'j'
-        # Go 3 characters to the right (should not do much).
-        'lll'
-        # Copy this block.
-        'y'
-        # Go down one line.
-        'j'
-        # Insert block twice.
-        '2p'
-        # Escape again.
-        '\x1b\r')
-
-    result, cli = feed(operations)
-
-    assert (result.text ==
-            '-line1\n-line2\n-line3\n-line4\n-line2\n-line3\n-line2\n-line3\n-line5\n-line6')
-
-
 def test_vi_character_paste():
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
 
@@ -752,39 +618,3 @@ def test_vi_character_paste():
     result, cli = feed('abcde\x1bhhxP\r')
     assert result.text == 'abcde'
     assert result.cursor_position == 2
-
-
-def test_vi_macros():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
-
-    # Record and execute macro.
-    result, cli = feed('\x1bqcahello\x1bq@c\r')
-    assert result.text == 'hellohello'
-    assert result.cursor_position == 9
-
-    # Running unknown macro.
-    result, cli = feed('\x1b@d\r')
-    assert result.text == ''
-    assert result.cursor_position == 0
-
-    # When a macro is called within a macro.
-    # It shouldn't result in eternal recursion.
-    result, cli = feed('\x1bqxahello\x1b@xq@x\r')
-    assert result.text == 'hellohello'
-    assert result.cursor_position == 9
-
-    # Nested macros.
-    result, cli = feed(
-        # Define macro 'x'.
-        '\x1bqxahello\x1bq'
-
-        # Define macro 'y' which calls 'x'.
-        'qya\x1b@xaworld\x1bq'
-
-        # Delete line.
-        '2dd'
-
-        # Execute 'y'
-        '@y\r')
-
-    assert result.text == 'helloworld'

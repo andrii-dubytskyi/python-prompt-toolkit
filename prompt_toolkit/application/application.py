@@ -14,7 +14,6 @@ from prompt_toolkit.key_binding.bindings.page_navigation import load_page_naviga
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, ConditionalKeyBindings, KeyBindingsBase, merge_key_bindings, GlobalOnlyKeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyProcessor
-from prompt_toolkit.key_binding.emacs_state import EmacsState
 from prompt_toolkit.key_binding.vi_state import ViState
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.controls import BufferControl
@@ -207,7 +206,6 @@ class Application(object):
 
         #: Vi state. (For Vi key bindings.)
         self.vi_state = ViState()
-        self.emacs_state = EmacsState()
 
         #: When to flush the input (For flushing escape keys.) This is important
         #: on terminals that use vt100 input. We can't distinguish the escape
@@ -333,7 +331,6 @@ class Application(object):
         self.key_processor.reset()
         self.layout.reset()
         self.vi_state.reset()
-        self.emacs_state.reset()
 
         # Trigger reset event.
         self.on_reset.fire()
@@ -492,23 +489,7 @@ class Application(object):
 
     def run_async(self, pre_run=None):
         """
-        Run asynchronous. Return a prompt_toolkit
-        :class:`~prompt_toolkit.eventloop.Future` object.
-
-        If you wish to run on top of asyncio, remember that a prompt_toolkit
-        `Future` needs to be converted to an asyncio `Future`. The cleanest way
-        is to call :meth:`~prompt_toolkit.eventloop.Future.to_asyncio_future`.
-        Also make sure to tell prompt_toolkit to use the asyncio event loop.
-
-        .. code:: python
-
-            from prompt_toolkit.eventloop import use_asyncio_event_loop
-            from asyncio import get_event_loop
-
-            use_asyncio_event_loop()
-            get_event_loop().run_until_complete(
-                application.run_async().to_asyncio_future())
-
+        Run asynchronous. Return a `Future` object.
         """
         assert not self._is_running
 

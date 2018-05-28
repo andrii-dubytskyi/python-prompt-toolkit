@@ -7,7 +7,7 @@ fragment types.
 """
 from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass, text_type
+from six import with_metaclass
 from six.moves import range
 
 from prompt_toolkit.application.current import get_app
@@ -17,7 +17,7 @@ from prompt_toolkit.filters import to_filter, vi_insert_multiple_mode
 from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.formatted_text.utils import fragment_list_len, fragment_list_to_text
 from prompt_toolkit.search import SearchDirection
-from prompt_toolkit.utils import to_int, to_str
+from prompt_toolkit.utils import to_int
 
 from .utils import explode_text_fragments
 
@@ -219,7 +219,7 @@ class HighlightSelectionProcessor(Processor):
                 # visualise the selection.
                 return Transformation([(selected_fragment, ' ')])
             else:
-                for i in range(from_, to):
+                for i in range(from_, to + 1):
                     if i < len(fragments):
                         old_fragment, old_text = fragments[i]
                         fragments[i] = (old_fragment + selected_fragment, old_text)
@@ -537,17 +537,18 @@ class TabsProcessor(Processor):
 
     :param tabstop: Horizontal space taken by a tab. (`int` or callable that
         returns an `int`).
-    :param char1: Character or callable that returns a character (text of
-        length one). This one is used for the first space taken by the tab.
-    :param char2: Like `char1`, but for the rest of the space.
+    :param get_char1: Callable that returns a character (text of length one).
+        This one is used for the first space taken by the tab.
+    :param get_char2: Like `get_char1`, but for the rest of the space.
     """
-    def __init__(self, tabstop=4, char1='|', char2='\u2508', style='class:tab'):
+    def __init__(self, tabstop=4, get_char1=None, get_char2=None,
+                 style='class:tab'):
         assert isinstance(tabstop, int) or callable(tabstop)
-        assert callable(char1) or isinstance(char1, text_type)
-        assert callable(char2) or isinstance(char2, text_type)
+        assert get_char1 is None or callable(get_char1)
+        assert get_char2 is None or callable(get_char2)
 
-        self.char1 = char1
-        self.char2 = char2
+        self.get_char1 = get_char1 or get_char2 or (lambda: '|')
+        self.get_char2 = get_char2 or get_char1 or (lambda: '\u2508')
         self.tabstop = tabstop
         self.style = style
 
@@ -556,8 +557,8 @@ class TabsProcessor(Processor):
         style = self.style
 
         # Create separator for tabs.
-        separator1 = to_str(self.char1)
-        separator2 = to_str(self.char2)
+        separator1 = self.get_char1()
+        separator2 = self.get_char2()
 
         # Transform fragments.
         fragments = explode_text_fragments(ti.fragments)

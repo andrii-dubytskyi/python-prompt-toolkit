@@ -82,12 +82,9 @@ PROMPT_TOOLKIT_STYLE = [
     # Scrollbars.
     ('scrollbar.background',                     ''),
     ('scrollbar.button',                         'bg:#888888'),
+    ('scrollbar.start',                          'underline #ffffff'),
+    ('scrollbar.end',                            'underline #000000'),
     ('scrollbar.arrow',                          'noinherit bold'),
-
-    # Start/end of scrollbars. Adding 'underline' here provides a nice little
-    # detail to the progress bar, but it doesn't look good on all terminals.
-    # ('scrollbar.start',                          'underline #ffffff'),
-    # ('scrollbar.end',                            'underline #000000'),
 
     # Auto suggestion text.
     ('auto-suggestion',                         '#666666'),
@@ -97,8 +94,8 @@ PROMPT_TOOLKIT_STYLE = [
     ('tab',                                     '#999999'),
 
     # When Control-C/D has been pressed. Grayed.
-    ('aborting',  '#888888 bg:default noreverse noitalic nounderline noblink'),
-    ('exiting',   '#888888 bg:default noreverse noitalic nounderline noblink'),
+    ('aborting',                                '#888888'),
+    ('exiting',                                 '#888888'),
 
     # Entering a Vi digraph.
     ('digraph',                                 '#4444ff'),

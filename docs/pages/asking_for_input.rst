@@ -28,8 +28,6 @@ and returns the text. Just like ``(raw_)input``.
     text = prompt('Give me some input: ')
     print('You said: %s' % text)
 
-.. image:: ../images/hello-world-prompt.png
-
 What we get here is a simple prompt that supports the Emacs key bindings like
 readline, but further nothing special. However,
 :func:`~prompt_toolkit.shortcuts.prompt` has a lot of configuration options.
@@ -109,9 +107,9 @@ you can do the following:
     from pygments.styles import get_style_by_name
     from prompt_toolkit.shortcuts import prompt
     from prompt_toolkit.lexers import PygmentsLexer
-    from prompt_toolkit.styles.pygments import style_from_pygments_cls
+    from prompt_toolkit.styles.pygments import style_from_pygments
 
-    style = style_from_pygments_cls(get_style_by_name('monokai'))
+    style = style_from_pygments(get_style_by_name('monokai'))
     text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer), style=style,
                   include_default_pygments_style=False)
     print('You said: %s' % text)
@@ -164,7 +162,7 @@ Using a Pygments style
 ^^^^^^^^^^^^^^^^^^^^^^
 
 All Pygments style classes can be used as well, when they are wrapped through
-:func:`~prompt_toolkit.styles.style_from_pygments_cls`.
+:func:`~prompt_toolkit.styles.style_from_pygments`.
 
 Suppose we'd like to use a Pygments style, for instance
 ``pygments.styles.tango.TangoStyle``, that is possible like this:
@@ -196,9 +194,7 @@ Coloring the prompt itself
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is possible to add some colors to the prompt itself. For this, we need to
-build some :ref:`formatted text <formatted_text>`. One way of doing is is by
-creating a list of style/text tuples. In the following example, we use class
-names to refer to the style.
+build some :ref:`formatted text <formatted_text>`.
 
 .. code:: python
 
@@ -206,16 +202,16 @@ names to refer to the style.
     from prompt_toolkit.styles import Style
 
     style = Style.from_dict({
-        # User input (default text).
+        # User input.
         '':          '#ff0066',
 
         # Prompt.
         'username': '#884444',
         'at':       '#00aa00',
-        'colon':    '#0000aa',
+        'colon':    '#00aa00',
         'pound':    '#00aa00',
-        'host':     '#00ffff bg:#444400',
-        'path':     'ansicyan underline',
+        'host':     '#000088 bg:#aaaaff',
+        'path':     '#884444 underline',
     })
 
     message = [
@@ -229,18 +225,16 @@ names to refer to the style.
 
     text = prompt(message, style=style)
 
-.. image:: ../images/colored-prompt.png
-
 The `message` can be any kind of formatted text, as discussed :ref:`here
 <formatted_text>`. It can also be a callable that returns some formatted text.
 
 By default, colors are taking from the 256 color palette. If you want to have
 24bit true color, this is possible by adding the ``true_color=True`` option to
-the :func:`~prompt_toolkit.shortcuts.prompt.prompt` function.
+the :func:`~prompt_toolkit.shortcuts.prompt.prompt`` function.
 
 .. code:: python
 
-    text = prompt(message, style=style, true_color=True)
+    text = prompt(get_prompt, style=style, true_color=True)
 
 
 Autocompletion
@@ -248,13 +242,13 @@ Autocompletion
 
 Autocompletion can be added by passing a ``completer`` parameter. This should
 be an instance of the :class:`~prompt_toolkit.completion.Completer` abstract
-base class. :class:`~prompt_toolkit.completion.WordCompleter` is an example of
-a completer that implements that interface.
+base class. ``WordCompleter`` is an example of a completer that implements that
+interface.
 
 .. code:: python
 
     from prompt_toolkit import prompt
-    from prompt_toolkit.completion import WordCompleter
+    from prompt_toolkit.contrib.completers import WordCompleter
 
     html_completer = WordCompleter(['<html>', '<body>', '<head>', '<title>'])
     text = prompt('Enter HTML: ', completer=html_completer)
@@ -416,37 +410,6 @@ If the input validation contains some heavy CPU intensive code, but you don't
 want to block the event loop, then it's recommended to wrap the validator class
 in a :class:`~prompt_toolkit.validation.ThreadedValidator`.
 
-Validator from a callable
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Instead of implementing the :class:`~prompt_toolkit.validation.Validator`
-abstract base class, it is also possible to start from a simple function and
-use the :meth:`~prompt_toolkit.validation.Validator.from_callable` classmethod.
-This is easier and sufficient for probably 90% of the validators. It looks as
-follows:
-
-.. code:: python
-
-    from prompt_toolkit.validation import Validator
-    from prompt_toolkit import prompt
-
-    def is_number(text):
-        return text.isdigit()
-
-    validator = Validator.from_callable(
-        is_number,
-        error_message='This input contains non-numeric characters',
-        move_cursor_to_end=True)
-
-    number = int(prompt('Give a number: ', validator=validator))
-    print('You said: %i' % number)
-
-We define a function that takes a string, and tells whether it's valid input or
-not by returning a boolean.
-:meth:`~prompt_toolkit.validation.Validator.from_callable` turns that into a
-:class:`~prompt_toolkit.validation.Validator` instance. Notice that setting the
-cursor position is not possible this way.
-
 
 History
 -------
@@ -494,15 +457,14 @@ Auto suggestion is a way to propose some input completions to the user like the
 
 Usually, the input is compared to the history and when there is another entry
 starting with the given text, the completion will be shown as gray text behind
-the current input. Pressing the right arrow :kbd:`→` or :kbd:`c-e` will insert
-this suggestion, :kbd:`alt-f` will insert the first word of the suggestion.
+the current input. Pressing the right arrow :kbd:`→` will insert this suggestion.
 
 .. note::
 
     When suggestions are based on the history, don't forget to share one
     :class:`~prompt_toolkit.history.History` object between consecutive
     :func:`~prompt_toolkit.shortcuts.prompt` calls. Using a
-    :class:`~prompt_toolkit.shortcuts.PromptSession` does this for you.
+    :class:`~prompt_toolkit.prompt.PromptSession` does this for you.
 
 Example:
 
@@ -527,15 +489,12 @@ passed as an argument.
 Adding a bottom toolbar
 -----------------------
 
-Adding a bottom toolbar is as easy as passing a ``bottom_toolbar`` argument to
-:func:`~prompt_toolkit.shortcuts.prompt`. This argument be either plain text,
-:ref:`formatted text <formatted_text>` or a callable that returns plain or
-formatted text.
-
-When a function is given, it will be called every time the prompt is rendered,
-so the bottom toolbar can be used to display dynamic information.
-
-The toolbar is always erased when the prompt returns.
+Adding a bottom toolbar is as easy as passing a ``bottom_toolbar`` function to
+:func:`~prompt_toolkit.shortcuts.prompt`. The function is called every time the
+prompt is rendered (at least on every key stroke), so the bottom toolbar can be
+used to display dynamic information. It should return formatted text or a list
+of ``(style, text)`` tuples. The toolbar is always erased when the prompt
+returns.
 
 .. code:: python
 
@@ -557,7 +516,6 @@ the background of the toolbar.
 
 .. image:: ../images/bottom-toolbar.png
 
-
 Adding a right prompt
 ---------------------
 
@@ -565,9 +523,7 @@ The :func:`~prompt_toolkit.shortcuts.prompt` function has out of the box
 support for right prompts as well. People familiar to ZSH could recognise this
 as the `RPROMPT` option.
 
-So, similar to adding a bottom toolbar, we can pass an ``rprompt`` argument.
-This can be either plain text, :ref:`formatted text <formatted_text>` or a
-callable which returns either.
+So, similar to adding a bottom toolbar, we can pass a ``get_rprompt`` callable.
 
 .. code:: python
 
@@ -629,25 +585,17 @@ An example of a prompt that prints ``'hello world'`` when :kbd:`Control-T` is pr
 
     @bindings.add('c-t')
     def _(event):
-        " Say 'hello' when `c-t` is pressed. "
         def print_hello():
             print('hello world')
         run_in_terminal(print_hello)
-
-    @bindings.add('c-x')
-    def _(event):
-        " Exit when `c-x` is pressed. "
-        event.app.exit()
 
     text = prompt('> ', key_bindings=bindings)
     print('You said: %s' % text)
 
 
 Note that we use
-:meth:`~prompt_toolkit.application.run_in_terminal` for the first key binding.
-This ensures that the output of the print-statement and the prompt don't mix
-up. If the key bindings doesn't print anything, then it can be handled directly
-without nesting functions.
+:meth:`~prompt_toolkit.application.run_in_terminal`. This
+ensures that the output of the print-statement and the prompt don't mix up.
 
 
 Enable key bindings according to a condition
@@ -775,7 +723,7 @@ margin is defined by the prompt.)
 
 .. code:: python
 
-    def prompt_continuation(width, line_number, is_soft_wrap):
+    def prompt_continuation(width):
         return '.' * width
         # Or: return [('', '.' * width)]
 
@@ -871,6 +819,6 @@ prompting the user for input is as simple as calling
                 result = await prompt('Say something: ', async_=True)
             print('You said: %s' % result)
 
-The :func:`~prompt_toolkit.patch_stdout.patch_stdout` context manager is
-optional, but it's recommended, because other coroutines could print to stdout.
-This ensures that other output won't destroy the prompt.
+The ``patch_stdout()`` context manager is optional, but it's recommended,
+because other coroutines could print to stdout. This ensures that other output
+won't destroy the prompt.

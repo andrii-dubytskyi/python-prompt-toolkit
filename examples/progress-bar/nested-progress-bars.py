@@ -3,13 +3,13 @@
 Example of nested progress bars.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
+from prompt_toolkit.shortcuts.progress_bar import progress_bar
 from prompt_toolkit import HTML
 import time
 
 
 def main():
-    with ProgressBar(
+    with progress_bar(
             title=HTML('<b fg="#aa00ff">Nested progress bars</b>'),
             bottom_toolbar=HTML(' <b>[Control-L]</b> clear  <b>[Control-C]</b> abort')) as pb:
 

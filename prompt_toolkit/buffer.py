@@ -16,7 +16,7 @@ from .filters import to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
 from .selection import SelectionType, SelectionState, PasteMode
-from .utils import Event, test_callable_args, to_str
+from .utils import Event, test_callable_args
 from .validation import ValidationError, Validator
 
 from functools import wraps
@@ -134,13 +134,12 @@ class Buffer(object):
     current input line and implements all text manipulations on top of it. It
     also implements the history, undo stack and the completion state.
 
-    :param eventloop: :class:`~prompt_toolkit.eventloop.EventLoop` instance.
+    :param eventloop: :class:`~prompt_toolkit.eventloop.base.EventLoop` instance.
     :param completer: :class:`~prompt_toolkit.completion.Completer` instance.
     :param history: :class:`~prompt_toolkit.history.History` instance.
-    :param tempfile_suffix: The tempfile suffix (extension) to be used for the
-        "open in editor" function. For a Python REPL, this would be ".py", so
-        that the editor knows the syntax highlighting to use. This can also be
-        a callable that returns a string.
+    :param get_tempfile_suffix: Callable that returns the tempfile suffix to be
+        used for the 'open in editor' function.
+    :param tempfile_suffix: The tempfile suffix.
     :param name: Name for this buffer. E.g. DEFAULT_BUFFER. This is mostly
         useful for key bindings where we sometimes prefer to refer to a buffer
         by their name instead of by reference.
@@ -158,31 +157,28 @@ class Buffer(object):
     Filters:
 
     :param complete_while_typing: :class:`~prompt_toolkit.filters.Filter`
-        or `bool`. Decide whether or not to do asynchronous autocompleting while
+        instance. Decide whether or not to do asynchronous autocompleting while
         typing.
     :param validate_while_typing: :class:`~prompt_toolkit.filters.Filter`
-        or `bool`. Decide whether or not to do asynchronous validation while
+        instance. Decide whether or not to do asynchronous validation while
         typing.
-    :param enable_history_search: :class:`~prompt_toolkit.filters.Filter` or
-        `bool` to indicate when up-arrow partial string matching is enabled. It
-        is advised to not enable this at the same time as
-        `complete_while_typing`, because when there is an autocompletion found,
-        the up arrows usually browse through the completions, rather than
-        through the history.
+    :param enable_history_search: :class:`~prompt_toolkit.filters.Filter`
+        to indicate when up-arrow partial string matching is enabled. It is
+        advised to not enable this at the same time as `complete_while_typing`,
+        because when there is an autocompletion found, the up arrows usually
+        browse through the completions, rather than through the history.
     :param read_only: :class:`~prompt_toolkit.filters.Filter`. When True,
         changes will not be allowed.
-    :param multiline: :class:`~prompt_toolkit.filters.Filter` or `bool`. When
-        not set, pressing `Enter` will call the `accept_handler`.  Otherwise,
-        pressing `Esc-Enter` is required.
+    :param multiline: When not set, pressing `Enter` will call the `accept_handler`.
+        Otherwise, pressing `Esc-Enter` is required.
     """
     def __init__(self, completer=None, auto_suggest=None, history=None,
-                 validator=None, tempfile_suffix='', name='',
-                 complete_while_typing=False, validate_while_typing=False,
+                 validator=None, get_tempfile_suffix=None, tempfile_suffix='',
+                 name='', complete_while_typing=False, validate_while_typing=False,
                  enable_history_search=False, document=None,
                  accept_handler=None, read_only=False, multiline=True,
-                 on_text_changed=None, on_text_insert=None,
-                 on_cursor_position_changed=None, on_completions_changed=None,
-                 on_suggestion_set=None):
+                 on_text_changed=None, on_text_insert=None, on_cursor_position_changed=None,
+                 on_completions_changed=None, on_suggestion_set=None):
 
         # Accept both filters and booleans as input.
         enable_history_search = to_filter(enable_history_search)
@@ -196,8 +192,10 @@ class Buffer(object):
         assert auto_suggest is None or isinstance(auto_suggest, AutoSuggest)
         assert history is None or isinstance(history, History)
         assert validator is None or isinstance(validator, Validator)
-        assert callable(tempfile_suffix) or isinstance(tempfile_suffix, six.text_type)
+        assert get_tempfile_suffix is None or callable(get_tempfile_suffix)
+        assert isinstance(tempfile_suffix, six.text_type)
         assert isinstance(name, six.text_type)
+        assert not (get_tempfile_suffix and tempfile_suffix)
         assert on_text_changed is None or callable(on_text_changed)
         assert on_text_insert is None or callable(on_text_insert)
         assert on_cursor_position_changed is None or callable(on_cursor_position_changed)
@@ -209,7 +207,7 @@ class Buffer(object):
         self.completer = completer or DummyCompleter()
         self.auto_suggest = auto_suggest
         self.validator = validator
-        self.tempfile_suffix = tempfile_suffix
+        self.get_tempfile_suffix = get_tempfile_suffix or (lambda: tempfile_suffix)
         self.name = name
         self.accept_handler = accept_handler
 
@@ -245,17 +243,7 @@ class Buffer(object):
         self._async_completer = self._create_completer_coroutine()
         self._async_validator = self._create_auto_validate_coroutine()
 
-        # Reset other attributes.
         self.reset(document=document)
-
-        # Attach callback for new history entries.
-        def new_history_item(sender):
-            # Insert the new string into `_working_lines`.
-            self._working_lines.insert(0, self.history.get_strings()[0])
-            self.__working_index += 1
-
-        self.history.get_item_loaded_event().add_handler(new_history_item)
-        self.history.start_loading()
 
     def __repr__(self):
         if len(self.text) < 15:
@@ -319,7 +307,7 @@ class Buffer(object):
         #: Ctrl-C should reset this, and copy the whole history back in here.
         #: Enter should process the current command and append to the real
         #: history.
-        self._working_lines = self.history.get_strings()[:]
+        self._working_lines = self.history.strings[:]
         self._working_lines.append(document.text)
         self.__working_index = len(self._working_lines) - 1
 
@@ -379,9 +367,6 @@ class Buffer(object):
             self._text_changed()
 
             # Reset history search text.
-            # (Note that this doesn't need to happen when working_index
-            #  changes, which is when we traverse the history. That's why we
-            #  don't do this in `self._text_changed`.)
             self.history_search_text = None
 
     @property
@@ -509,7 +494,6 @@ class Buffer(object):
         # both set and consistent.)
         if text_changed:
             self._text_changed()
-            self.history_search_text = None
 
         if cursor_position_changed:
             self._cursor_position_changed()
@@ -941,9 +925,8 @@ class Buffer(object):
             to take.
         """
         assert n is None or isinstance(n, int)
-        history_strings = self.history.get_strings()
 
-        if not len(history_strings):
+        if not len(self.history):
             return
 
         # Make sure we have a `YankNthArgState`.
@@ -957,11 +940,11 @@ class Buffer(object):
 
         # Get new history position.
         new_pos = state.history_position - 1
-        if -new_pos > len(history_strings):
+        if -new_pos > len(self.history):
             new_pos = -1
 
         # Take argument from line.
-        line = history_strings[new_pos]
+        line = self.history[new_pos]
 
         words = [w.strip() for w in _QUOTED_WORDS_RE.split(line)]
         words = [w for w in words if w]
@@ -1212,10 +1195,8 @@ class Buffer(object):
         """
         # Save at the tail of the history. (But don't if the last entry the
         # history is already the same.)
-        if self.text:
-            history_strings = self.history.get_strings()
-            if not len(history_strings) or history_strings[-1] != self.text:
-                self.history.append_string(self.text)
+        if self.text and (not len(self.history) or self.history[-1] != self.text):
+            self.history.append(self.text)
 
     def _search(self, search_state, include_current_position=False, count=1):
         """
@@ -1351,7 +1332,7 @@ class Buffer(object):
             raise EditReadOnlyBuffer()
 
         # Write to temporary file
-        descriptor, filename = tempfile.mkstemp(to_str(self.tempfile_suffix))
+        descriptor, filename = tempfile.mkstemp(self.get_tempfile_suffix())
         os.write(descriptor, self.text.encode('utf-8'))
         os.close(descriptor)
 

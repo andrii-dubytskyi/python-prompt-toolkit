@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
-from .base import ProgressBar
+from .base import progress_bar
 from .formatters import Formatter, Text, Label, Percentage, Bar, Progress, TimeElapsed, TimeLeft, IterationsPerSecond, SpinningWheel, Rainbow
 
 __all__ = [
-    'ProgressBar',
+    'progress_bar',
 
     # Formatters.
     'Formatter',

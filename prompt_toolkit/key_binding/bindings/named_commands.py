@@ -11,7 +11,6 @@ from .completion import generate_completions, display_completions_like_readline
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding.key_processor import KeyPress
-from prompt_toolkit.key_binding.key_bindings import key_binding
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.search import SearchDirection
 from prompt_toolkit.selection import PasteMode
@@ -32,7 +31,8 @@ def register(name):
     assert isinstance(name, six.text_type)
 
     def decorator(handler):
-        " `handler` is a callable or _Binding. "
+        assert callable(handler)
+
         _readline_commands[name] = handler
         return handler
     return decorator
@@ -318,10 +318,6 @@ def kill_word(event):
 
     if pos:
         deleted = buff.delete(count=pos)
-
-        if event.is_repeat:
-            deleted = event.app.clipboard.get_data().text + deleted
-
         event.app.clipboard.set_text(deleted)
 
 
@@ -471,7 +467,7 @@ def start_kbd_macro(event):
     """
     Begin saving the characters typed into the current keyboard macro.
     """
-    event.app.emacs_state.start_macro()
+    event.app.key_processor.start_macro()
 
 
 @register('end-kbd-macro')
@@ -480,24 +476,16 @@ def end_kbd_macro(event):
     Stop saving the characters typed into the current keyboard macro and save
     the definition.
     """
-    event.app.emacs_state.end_macro()
+    event.app.key_processor.end_macro()
 
 
 @register('call-last-kbd-macro')
-@key_binding(record_in_macro=False)
 def call_last_kbd_macro(event):
     """
     Re-execute the last keyboard macro defined, by making the characters in the
     macro appear as if typed at the keyboard.
-
-    Notice that we pass `record_in_macro=False`. This ensures that the 'c-x e'
-    key sequence doesn't appear in the recording itself. This function inserts
-    the body of the called macro back into the KeyProcessor, so these keys will
-    be added later on to the macro of their handlers have `record_in_macro=True`.
     """
-    # Insert the macro.
-    event.app.key_processor.feed_multiple(
-        event.app.emacs_state.macro, first=True)
+    event.app.key_processor.call_macro()
 
 
 @register('print-last-kbd-macro')

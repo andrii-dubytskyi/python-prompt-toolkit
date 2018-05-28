@@ -5,8 +5,16 @@ Application
 -----------
 
 .. automodule:: prompt_toolkit.application
-    :members: Application, get_app, set_app, NoRunningApplicationError,
-        DummyApplication, run_in_terminal, run_coroutine_in_terminal
+    :members: Application
+
+.. automodule:: prompt_toolkit.application
+    :members: get_app, set_app, NoRunningApplicationError
+
+.. automodule:: prompt_toolkit.application
+    :members: DummyApplication
+
+.. automodule:: prompt_toolkit.application
+    :members: run_in_terminal, run_coroutine_in_terminal
 
 
 Formatted text
@@ -34,7 +42,10 @@ Clipboard
 ---------
 
 .. automodule:: prompt_toolkit.clipboard
-    :members: Clipboard, ClipboardData, DummyClipboard, DynamicClipboard, InMemoryClipboard
+    :members: Clipboard, ClipboardData, DummyClipboard, DynamicClipboard
+
+.. automodule:: prompt_toolkit.clipboard
+    :members: InMemoryClipboard
 
 .. automodule:: prompt_toolkit.clipboard.pyperclip
     :members:
@@ -79,21 +90,31 @@ Style
 -----
 
 .. automodule:: prompt_toolkit.styles
-    :members: Attrs, ANSI_COLOR_NAMES, BaseStyle, DummyStyle, DynamicStyle,
-        Style, Priority, merge_styles, style_from_pygments_cls,
-        style_from_pygments_dict, pygments_token_to_classname, NAMED_COLORS
+    :members: Attrs, ANSI_COLOR_NAMES, BaseStyle, DummyStyle, DynamicStyle
+
+.. automodule:: prompt_toolkit.styles
+    :members: Style, Priority, merge_styles
+
+.. automodule:: prompt_toolkit.styles
+    :members: style_from_pygments_cls, style_from_pygments_dict, pygments_token_to_classname
+
+.. automodule:: prompt_toolkit.styles.named_colors
+    :members: NAMED_COLORS
 
 
 Shortcuts
 ---------
 
 .. automodule:: prompt_toolkit.shortcuts
-    :members: prompt, PromptSession, confirm, CompleteStyle,
-        create_confirm_session, clear, clear_title, print_formatted_text,
-        set_title, ProgressBar, input_dialog, message_dialog, progress_dialog,
-        radiolist_dialog, yes_no_dialog, button_dialog
+    :members: prompt, PromptSession
 
-.. automodule:: prompt_toolkit.shortcuts.progress_bar.formatters
+.. automodule:: prompt_toolkit.shortcuts
+    :members: clear, clear_title, print_formatted_text, set_title
+
+.. automodule:: prompt_toolkit.shortcuts.dialogs
+    :members:
+
+.. automodule:: prompt_toolkit.shortcuts.progress_bar
     :members:
 
 
@@ -138,26 +159,43 @@ Containers
 ^^^^^^^^^^
 
 .. automodule:: prompt_toolkit.layout
-    :members: Container, HSplit, VSplit, FloatContainer, Float, Window,
-        WindowAlign, ConditionalContainer, ScrollOffsets, ColorColumn,
-        to_container, to_window, is_container, HorizontalAlign, VerticalAlign
+    :members: Container, HSplit, VSplit, FloatContainer, Float, Window, ConditionalContainer, ScrollOffsets, ColorColumn, to_container, to_window, is_container, HorizontalAlign, VerticalAlign
 
 
 Controls
 ^^^^^^^^
 
 .. automodule:: prompt_toolkit.layout
-    :members: BufferControl, SearchBufferControl, DummyControl,
-        FormattedTextControl, UIControl, UIContent
+    :members: BufferControl, SearchBufferControl, DummyControl, FormattedTextControl, UIControl, UIContent
+
+
+Widgets
+^^^^^^^
+
+.. automodule:: prompt_toolkit.widgets
+    :members: TextArea, Label, Button, Frame, Shadow, Box, VerticalLine, HorizontalLine, RadioList, Checkbox, ProgressBar
+
+.. automodule:: prompt_toolkit.widgets
+    :members: ArgToolbar, CompletionsToolbar, FormattedTextToolbar, SearchToolbar, SystemToolbar, ValidationToolbar
+
+.. automodule:: prompt_toolkit.widgets
+    :members: Dialog
+
+.. automodule:: prompt_toolkit.widgets
+    :members: MenuContainer, MenuItem
 
 
 Other
 ^^^^^
 
 .. automodule:: prompt_toolkit.layout
-    :members: Dimension, Margin, NumberedMargin, ScrollbarMargin,
-        ConditionalMargin, PromptMargin, CompletionsMenu,
-        MultiColumnCompletionsMenu
+    :members: Dimension
+
+.. automodule:: prompt_toolkit.layout
+    :members: Margin, NumberedMargin, ScrollbarMargin, ConditionalMargin, PromptMargin
+
+.. automodule:: prompt_toolkit.layout
+    :members: CompletionsMenu, MultiColumnCompletionsMenu
 
 .. automodule:: prompt_toolkit.layout.processors
     :members:
@@ -167,16 +205,6 @@ Other
 
 .. automodule:: prompt_toolkit.layout.screen
     :members:
-
-
-Widgets
--------
-
-.. automodule:: prompt_toolkit.widgets
-    :members: TextArea, Label, Button, Frame, Shadow, Box, VerticalLine,
-        HorizontalLine, RadioList, Checkbox, ProgressBar, CompletionsToolbar,
-        FormattedTextToolbar, SearchToolbar, SystemToolbar, ValidationToolbar,
-        MenuContainer, MenuItem
 
 
 Filters
@@ -215,12 +243,8 @@ Key binding
 Eventloop
 ---------
 
-.. automodule:: prompt_toolkit.eventloop
-    :members: EventLoop, get_traceback_from_context, From, Return,
-        ensure_future, create_event_loop, create_asyncio_event_loop,
-        use_asyncio_event_loop, get_event_loop, set_event_loop,
-        run_in_executor, call_from_executor, run_until_complete, Future,
-        InvalidStateError
+.. automodule:: prompt_toolkit.eventloop.base
+    :members:
 
 .. automodule:: prompt_toolkit.eventloop.posix
     :members:
@@ -234,12 +258,21 @@ Eventloop
 .. automodule:: prompt_toolkit.eventloop.asyncio_posix
     :members:
 
+.. automodule:: prompt_toolkit.eventloop.coroutine
+    :members:
+
+.. automodule:: prompt_toolkit.eventloop.future
+    :members:
+
 
 Input
 -----
 
 .. automodule:: prompt_toolkit.input
-    :members: Input, DummyInput, create_input, get_default_input, set_default_input
+    :members:
+
+.. automodule:: prompt_toolkit.input.defaults
+    :members:
 
 .. automodule:: prompt_toolkit.input.vt100
     :members:
@@ -251,18 +284,13 @@ Output
 ------
 
 .. automodule:: prompt_toolkit.output
-    :members: Output, DummyOutput, ColorDepth, create_output,
-        get_default_output, set_default_output
+    :members:
+
+.. automodule:: prompt_toolkit.output.defaults
+    :members:
 
 .. automodule:: prompt_toolkit.output.vt100
     :members:
 
 .. automodule:: prompt_toolkit.output.win32
     :members:
-
-
-Patch stdout
-------------
-
-.. automodule:: prompt_toolkit.patch_stdout
-    :members: patch_stdout, StdoutProxy
